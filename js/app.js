@@ -3,10 +3,11 @@ import { UNITS, COMING, PHASES, lessonsOf } from './content.js';
 import * as S from './store.js';
 import { cloudEnabled, currentUser, signIn } from './cloud.js';
 import { lessonQueue, testQueue, RENDER, itemBySv, shuffle, matchBoard } from './exercises.js';
-import { say, hasSwedishVoice } from './speech.js';
+import { say, sayQueued, stopSpeaking, hasSwedishVoice } from './speech.js';
 import { t, tp, esc } from './i18n.js';
 import { greeting, cheer, wordOfDay, confetti } from './greet.js';
 import { LIFE } from './life.js';
+import { STORIES, COMMON } from './stories.js';
 
 const $ = sel => document.querySelector(sel);
 const main = $('#main');
@@ -30,6 +31,7 @@ const routes = {
   life: renderTopic,
   lifewords: id => runSession('lesson', lifeUnit(id), 0),
   lifequiz: runQuiz,
+  story: renderStory,
   login: renderLogin,
 };
 
@@ -40,7 +42,7 @@ function route() {
   (routes[name] || renderHome)(...args);
   const tab = ['review', 'games'].includes(name) ? 'practice' : name;
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.r === tab));
-  const inSession = ['lesson', 'test', 'game', 'lifewords', 'lifequiz', 'practicewords'].includes(name);
+  const inSession = ['lesson', 'test', 'game', 'lifewords', 'lifequiz', 'practicewords', 'story'].includes(name);
   $('nav').hidden = inSession;
   $('header').hidden = inSession;
 }
@@ -69,7 +71,8 @@ function renderHome() {
   const due = S.dueWords().length;
   const lessons = lessonsOf(unit);
   const p = S.unitProgress(unit.id);
-  const nextLabel = p.lessonsDone >= lessons.length ? t('test') : `${t('lesson')} ${p.lessonsDone + 1}`;
+  const nextStep = unitNextStep(unit);
+  const nextLabel = nextStep.kind === 'test' ? t('test') : nextStep.kind === 'story' ? `📖 ${t('story')}` : `${t('lesson')} ${p.lessonsDone + 1}`;
   const g = greeting();
   const [cheerSv, cheerAr] = cheer(st);
   const wod = wordOfDay();
@@ -117,11 +120,20 @@ function renderHome() {
       <button class="btn ghost" id="voiceOk">✕ ${t('hide')}</button></section>`}`;
   if ($('#voiceOk')) $('#voiceOk').onclick = () => { try { localStorage.setItem('ts_voice_ok', '1'); } catch {} $('#voice').remove(); };
   showNote();
-  $('#cont').onclick = () => go(p.lessonsDone >= lessons.length ? `test/${unit.id}` : `lesson/${unit.id}/${p.lessonsDone}`);
+  $('#cont').onclick = () => go(nextStep.path);
   $('#rev').onclick = () => go('review');
   $('#sayHi').onclick = () => say(g.svText);
   $('#wod').onclick = () => say(wod.sv);
   if (nextLife) $('#life').onclick = () => go(`life/${nextLife.id}`);
+}
+
+// Lessons first, then the unit's story, then the test.
+function unitNextStep(unit) {
+  const p = S.unitProgress(unit.id);
+  const n = lessonsOf(unit).length;
+  if (p.lessonsDone < n) return { kind: 'lesson', path: `lesson/${unit.id}/${p.lessonsDone}` };
+  if (STORIES[unit.id] && !S.storyProgress(unit.id).done) return { kind: 'story', path: `story/${unit.id}` };
+  return { kind: 'test', path: `test/${unit.id}` };
 }
 
 const voiceDismissed = () => { try { return localStorage.getItem('ts_voice_ok') === '1'; } catch { return false; } };
@@ -148,8 +160,9 @@ function renderCourse() {
       const open = S.isUnitOpen(i);
       const p = S.unitProgress(u.id);
       const ls = lessonsOf(u);
-      const steps = Math.min(p.lessonsDone, ls.length) + (p.passed ? 1 : 0);
-      const pct = Math.round((steps / (ls.length + 1)) * 100);
+      const hasStory = Boolean(STORIES[u.id]);
+      const steps = Math.min(p.lessonsDone, ls.length) + (p.passed ? 1 : 0) + (hasStory && S.storyProgress(u.id).done ? 1 : 0);
+      const pct = Math.round((steps / (ls.length + 1 + (hasStory ? 1 : 0))) * 100);
       html += `
         <div class="unit ${open ? '' : 'locked'} ${p.passed ? 'passed' : ''} ${u.id === S.getState().position.unit ? 'current' : ''}">
           <div class="unit-head">
@@ -163,7 +176,8 @@ function renderCourse() {
           ${open ? `<div class="lessons">
             ${ls.map((l, k) => `<button class="dot ${k < p.lessonsDone ? 'done' : ''}" data-go="lesson/${u.id}/${k}"
               ${k > p.lessonsDone ? 'disabled' : ''}>${k < p.lessonsDone ? '✓' : k + 1}</button>`).join('')}
-            <button class="dot test ${p.passed ? 'done' : ''}" data-go="test/${u.id}" ${p.lessonsDone < ls.length ? 'disabled' : ''}>🏆</button>
+            ${STORIES[u.id] ? `<button class="dot story ${S.storyProgress(u.id).done ? 'done' : ''}" data-go="story/${u.id}" ${p.lessonsDone < ls.length ? 'disabled' : ''}>📖</button>` : ''}
+            <button class="dot test ${p.passed ? 'done' : ''}" data-go="test/${u.id}" ${unitNextStep(u).kind !== 'test' ? 'disabled' : ''}>🏆</button>
           </div>` : ''}
         </div>`;
     }
@@ -281,7 +295,7 @@ function runSession(kind, unit, lessonIndex = 0) {
         <div class="goal-bar"><div style="width:${goalPct}%"></div></div>
         <p class="muted">${t('goal')}: ${goalPct}%${goalPct >= 100 ? ' ✅' : ''}</p>
         ${kind === 'lesson' && left > 0 ? `<p>${t('lessonsLeft')} <b>${left}</b></p>` : ''}
-        ${kind === 'lesson' && left === 0 && !unit.life && !unit.practice ? `<p>🏆 ${t('testReady')}</p>` : ''}
+        ${kind === 'lesson' && left === 0 && !unit.life && !unit.practice ? `<p>${STORIES[unit.id] && !S.storyProgress(unit.id).done ? `📖 ${t('storyReady')}` : `🏆 ${t('testReady')}`}</p>` : ''}
         ${missed.size ? `<div class="missed card">
           <b>${t('missedWords')}</b>
           ${[...missed].map(sv => `<button class="word-row" data-say="${esc(sv)}">${svs(sv)}<span class="muted grow">${esc(itemBySv(sv)?.ar || '')}</span>🔊</button>`).join('')}
@@ -296,6 +310,140 @@ function runSession(kind, unit, lessonIndex = 0) {
   };
 
   next();
+}
+
+// ---- Story / dialogue ----
+function renderStory(unitId) {
+  const story = STORIES[unitId];
+  const unit = UNITS.find(u => u.id === unitId);
+  if (!story || !unit) return go('course');
+  const known = new Map([...unit.words, ...UNITS.slice(0, UNITS.indexOf(unit)).flatMap(u => u.words)]
+    .map(w => [w.sv.replace(/^(en|ett) /, '').toLowerCase().replace(/[.,!?"]/g, ''), w.ar]));
+  const gloss = new Map(Object.entries(story.gloss || {}));
+  const meaning = w => gloss.get(w) || known.get(w) || COMMON[w];
+  // Longest match first, so "god morgon" and "det här" glide together as one tap.
+  const clean = w => w.toLowerCase().replace(/[.,!?"]/g, '');
+  const tokens = sv => {
+    const parts = sv.split(' '), html = [];
+    for (let i = 0; i < parts.length;) {
+      let n = 3;
+      while (n > 1 && !(i + n <= parts.length && meaning(parts.slice(i, i + n).map(clean).join(' ')))) n--;
+      const text = parts.slice(i, i + n).join(' '), w = parts.slice(i, i + n).map(clean).join(' ');
+      html.push(meaning(w) ? `<button class="tok" data-w="${esc(w)}">${esc(text)}</button>` : esc(text));
+      i += n;
+    }
+    return html.join(' ');
+  };
+  S.log('story_open', { unit: unitId });
+  let playing = false;
+  main.innerHTML = `
+    <div class="session story">
+      <div class="bar-top"><button class="x" id="quit">✕</button><b class="grow center">📖 ${t('story')}</b></div>
+      <section class="topic-head"><div class="emoji">${story.e}</div><h1 lang="sv" dir="ltr">${esc(story.sv)}</h1><p class="muted">${esc(story.ar)}</p></section>
+      <div class="row">
+        <button class="btn primary" id="play">▶️ ${t('listenAll')}</button>
+        <button class="btn" id="slow">🐢 ${t('slow')}</button>
+      </div>
+      <p class="muted small center">${t('storyHelp')}</p>
+      <section class="card article lines">
+        ${story.lines.map((l, k) => `
+          <div class="line ${l.who === 'B' ? 'b' : ''}" data-k="${k}">
+            ${l.who ? `<span class="who">${esc(story.people[l.who])}</span>` : ''}
+            <p class="sv-line" lang="sv" dir="ltr">${tokens(l.sv)}</p>
+            <p class="ar-line" hidden>${esc(l.ar)}</p>
+            <div class="line-tools">
+              <button class="mini" data-act="say">🔊</button>
+              <button class="mini" data-act="ar">ع</button>
+              <button class="mini" data-act="save">⭐</button>
+            </div>
+          </div>`).join('')}
+      </section>
+      <div id="wordtip" class="wordtip" hidden></div>
+      <button class="btn primary wide" id="toQ">✅ ${t('storyQuestions')}</button>
+    </div>`;
+  $('#quit').onclick = () => { stopSpeaking(); go('course'); };
+  const lineEl = k => main.querySelector(`.line[data-k="${k}"]`);
+  const playAll = async slow => {
+    if (playing) { playing = false; stopSpeaking(); return; }
+    playing = true;
+    stopSpeaking();
+    for (let k = 0; k < story.lines.length && playing; k++) {
+      lineEl(k).classList.add('now');
+      lineEl(k).scrollIntoView({ behavior: 'smooth', block: 'center' });
+      await sayQueued(story.lines[k].sv, slow, story.lines[k].who === 'B' ? 1.25 : 1);
+      lineEl(k)?.classList.remove('now');
+    }
+    playing = false;
+    S.log('story_listened', { unit: unitId, slow });
+  };
+  $('#play').onclick = () => playAll(false);
+  $('#slow').onclick = () => playAll(true);
+  main.querySelectorAll('.line').forEach(el => {
+    const l = story.lines[+el.dataset.k];
+    el.querySelector('[data-act="say"]').onclick = () => say(l.sv, false, l.who === 'B' ? 1.25 : 1);
+    el.querySelector('[data-act="ar"]').onclick = () => { const a = el.querySelector('.ar-line'); a.hidden = !a.hidden; };
+    el.querySelector('[data-act="save"]').onclick = e => {
+      if (S.mineSentence(l)) { S.save(); e.target.textContent = '✅'; ding(); }
+    };
+  });
+  main.querySelectorAll('.tok').forEach(b => b.onclick = e => {
+    e.stopPropagation();
+    const tip = $('#wordtip');
+    tip.innerHTML = `<b lang="sv" dir="ltr">${esc(b.textContent)}</b> = ${esc(meaning(b.dataset.w))}`;
+    tip.hidden = false;
+    say(b.textContent);
+    clearTimeout(tip._t); tip._t = setTimeout(() => { tip.hidden = true; }, 2500);
+  });
+  $('#toQ').onclick = () => { stopSpeaking(); scrollTo(0, 0); storyQuestions(unitId, story); };
+}
+
+function storyQuestions(unitId, story) {
+  let i = 0, right = 0;
+  main.innerHTML = `
+    <div class="session">
+      <div class="bar-top"><button class="x" id="quit">✕</button><div class="progress"><div id="prog"></div></div></div>
+      <div id="ex"></div>
+    </div>`;
+  $('#quit').onclick = () => go(`story/${unitId}`);
+  const show = () => {
+    if (i >= story.questions.length) {
+      const score = Math.round((right / story.questions.length) * 100);
+      S.finishStory(unitId, score);
+      S.addXp(10 + right * 3);
+      S.save();
+      if (score >= 60) setTimeout(confetti, 150);
+      main.innerHTML = `<div class="done-screen"><div class="big-emoji">${score >= 60 ? '📖🎉' : '💪'}</div>
+        <h1>${t('done')}</h1><p class="score">${t('score')}: <b>${score}%</b></p>
+        <p>🏆 ${t('testReady')}</p>
+        <div class="row"><button class="btn" id="again">📖 ${t('readAgain')}</button><button class="btn primary" id="h">${t('continue')}</button></div></div>`;
+      $('#again').onclick = () => go(`story/${unitId}`);
+      $('#h').onclick = () => go('home');
+      return;
+    }
+    const q = story.questions[i];
+    const el = $('#ex');
+    el.className = 'ex';
+    el.innerHTML = `
+      <p class="ex-title" lang="sv" dir="ltr">${esc(q.q)}</p>
+      <button class="btn ghost" id="hint">ع ${t('hint')}</button>
+      <p class="muted" id="qa" hidden>${esc(q.qa)}</p>
+      <div class="options">${q.a.map((a, k) => `<button class="opt" data-k="${k}" lang="sv" dir="ltr">${esc(a)}</button>`).join('')}</div>
+      <button class="btn primary wide" id="nx" hidden>${t('continue')}</button>`;
+    say(q.q);
+    $('#hint').onclick = () => { $('#qa').hidden = false; };
+    el.querySelectorAll('.opt').forEach(b => b.onclick = () => {
+      const ok = +b.dataset.k === q.c;
+      if (ok) right++;
+      ok ? ding() : buzz();
+      S.log('story_answer', { unit: unitId, q: i, ok });
+      el.querySelectorAll('.opt').forEach(x => { x.disabled = true; if (+x.dataset.k === q.c) x.classList.add('right'); });
+      if (!ok) b.classList.add('bad');
+      $('#prog').style.width = `${Math.round(((i + 1) / story.questions.length) * 100)}%`;
+      $('#nx').hidden = false;
+      $('#nx').onclick = () => { i++; show(); };
+    });
+  };
+  show();
 }
 
 // Mistakes from the last session, practised again as a short lesson.

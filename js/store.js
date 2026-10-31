@@ -23,6 +23,8 @@ function fresh() {
     games: {},        // gameId -> { best, plays }
     life: {},         // topicId -> { read, wordsDone, quizBest, quizTries }
     lastMissed: [],   // words missed in the latest session, for a quick re-practice
+    stories: {},      // unitId -> { done, best, tries }
+    mined: {},        // sv -> { sv, ar } sentences Tala saved from stories
     updatedAt: null,
   };
 }
@@ -33,7 +35,7 @@ let queue = loadQueue();
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY));
-    if (s && s.version === 1) { s.life ||= {}; s.lastMissed ||= []; return s; }
+    if (s && s.version === 1) { s.life ||= {}; s.lastMissed ||= []; s.stories ||= {}; s.mined ||= {}; return s; }
   } catch {}
   return fresh();
 }
@@ -169,6 +171,25 @@ export function finishGame(id, score) {
   g.best = Math.max(g.best, score);
   state.games[id] = g;
   log('game_done', { game: id, score });
+}
+
+export function storyProgress(id) {
+  return state.stories[id] || { done: false, best: null, tries: 0 };
+}
+
+export function finishStory(id, score) {
+  const p = storyProgress(id);
+  state.stories[id] = { done: true, best: Math.max(p.best ?? 0, score), tries: p.tries + 1 };
+  log('story_done', { unit: id, score });
+}
+
+// A sentence saved from a story becomes a flashcard due today.
+export function mineSentence(line) {
+  if (state.mined[line.sv]) return false;
+  state.mined[line.sv] = { sv: line.sv, ar: line.ar };
+  state.words[line.sv] = { seen: 0, ok: 0, bad: 0, box: 0, due: today(), last: null };
+  log('sentence_saved', { sv: line.sv });
+  return true;
 }
 
 export function setLastMissed(list) {

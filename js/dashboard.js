@@ -1,6 +1,7 @@
 // Eslam's page: exactly where Tala is in the course and how it is going.
 import { UNITS, lessonsOf, allItems } from './content.js';
 import { LIFE } from './life.js';
+import { STORIES } from './stories.js';
 import { cloudEnabled, currentUser, signIn, signOut, rest, useSessionKey } from './cloud.js';
 
 // Separate login from the learner app, so Eslam's account never becomes the app's account on a shared phone.
@@ -168,6 +169,19 @@ function render({ state, syncedAt, events }) {
       </table></div>
     </section>
 
+    <section class="card">
+      <h2>Berättelser och dialoger (${Object.keys(STORIES).filter(id => state.stories?.[id]?.done).length} av ${Object.keys(STORIES).length} klara)</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Enhet</th><th>Berättelse</th><th>Bästa resultat</th><th>Försök</th><th>Lyssnat</th></tr></thead>
+        <tbody>${Object.entries(STORIES).map(([id, st]) => {
+          const p = state.stories?.[id] || {};
+          const heard = events.filter(e => e.type === 'story_listened' && e.data?.unit === id).length;
+          return `<tr><td>${esc(UNIT_NAME[id] || id)}</td><td>${st.e} ${esc(st.sv)}</td><td>${p.best != null ? p.best + ' %' : '–'}</td><td>${p.tries || 0}</td><td>${heard}×</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+      ${Object.keys(state.mined || {}).length ? `<p class="muted small">Meningar hon sparat som flashcards: ${Object.keys(state.mined).map(esc).join(' · ')}</p>` : ''}
+    </section>
+
     <section class="grid2">
       <div class="card">
         <h2>Träffsäkerhet per övning</h2>
@@ -258,6 +272,11 @@ function describe(e) {
     case 'life_words_done': return `Övade orden i <b>${u}</b>: ${d.score} %`;
     case 'life_quiz_done': return `Quiz <b>${u}</b>: ${d.score} %`;
     case 'life_answer': return `Quizfråga ${d.q + 1} i <b>${UNIT_NAME[d.topic] || ''}</b>: ${d.ok ? '✅' : '❌'}`;
+    case 'story_open': return `Öppnade berättelsen i <b>${u}</b>`;
+    case 'story_listened': return `Lyssnade på berättelsen i <b>${u}</b>${d.slow ? ' (långsamt)' : ''}`;
+    case 'story_done': return `Berättelse <b>${u}</b>: ${d.score} % rätt på frågorna`;
+    case 'story_answer': return `Fråga ${d.q + 1} om berättelsen i <b>${u}</b>: ${d.ok ? '✅' : '❌'}`;
+    case 'sentence_saved': return `Sparade meningen <b lang="sv">${esc(d.sv || '')}</b> som flashcard ⭐`;
     case 'goal_set': return `Satte dagligt mål till ${d.minutes} min`;
     default: return esc(e.type);
   }

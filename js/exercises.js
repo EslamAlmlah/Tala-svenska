@@ -16,7 +16,8 @@ const pick = (a, n) => shuffle(a).slice(0, n);
 
 const ITEMS = allItems();
 const bySv = new Map(ITEMS.map(i => [i.sv, i]));
-export const itemBySv = sv => bySv.get(sv);
+export const itemBySv = sv => bySv.get(sv) || minedItem(sv);
+const minedItem = sv => { const m = getState().mined?.[sv]; return m && { ...m, unit: 'mined', kind: 'sentence' }; };
 
 function distractors(item, n) {
   const same = ITEMS.filter(i => i.kind === item.kind && i.sv !== item.sv && i.ar !== item.ar);

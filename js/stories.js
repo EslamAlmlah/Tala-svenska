@@ -1,0 +1,202 @@
+// A short story or dialogue for each unit: real Swedish to listen to and read,
+// built from the unit's words. Lines: { who?, sv, ar }. gloss: words not taught yet.
+// Questions are in Swedish (q) with an Arabic hint (qa); c = index of the correct answer.
+
+// Everyday words a tap should always explain, even before their unit teaches them.
+export const COMMON = {
+  jag: 'أنا', du: 'أنتِ / أنتَ', han: 'هو', hon: 'هي', vi: 'نحن', de: 'هم',
+  god: 'جيّد / لذيذ', morgon: 'صباح', heter: 'اسمه / اسمي', vad: 'ماذا / ما',
+  hur: 'كيف', mår: 'حالُه (أشعر)', 'hej då': 'مع السلامة', då: 'إذن / عندها',
+  det: 'هذا / إنّه', här: 'هنا', från: 'من', bor: 'يسكن', i: 'في', pratar: 'يتكلّم',
+  lär: 'يتعلّم (مع sig)', sig: 'نفسه', 'lär sig': 'يتعلّم', 'det här': 'هذا / هذه',
+  kaffe: 'قهوة', te: 'شاي', blir: 'يصبح', en: 'أداة نكرة (واحد)', ett: 'أداة نكرة (واحد)',
+  inte: 'لا / ليس', har: 'عنده / لديّ', ha: 'يأخذ / يملك', nu: 'الآن', och: 'و',
+  lägenheten: 'الشقة', köket: 'المطبخ', fönstret: 'النافذة', stort: 'كبير (مع ett)',
+  bordet: 'الطاولة', telefonen: 'الهاتف', dörren: 'الباب', sängen: 'السرير', huset: 'البيت',
+  fika: 'استراحة قهوة وحلوى', juni: 'حزيران / يونيو', mmm: 'ممم (لذيذ!)',
+};
+
+export const STORIES = {
+  u1: {
+    kind: 'dialog', e: '☕', sv: 'På morgonen', ar: 'في الصباح',
+    people: { A: 'Erik', B: 'Tala' },
+    lines: [
+      { who: 'A', sv: 'God morgon!', ar: 'صباح الخير!' },
+      { who: 'B', sv: 'Hej! God morgon.', ar: 'مرحباً! صباح الخير.' },
+      { who: 'A', sv: 'Jag heter Erik. Vad heter du?', ar: 'اسمي إريك. ما اسمك؟' },
+      { who: 'B', sv: 'Jag heter Tala.', ar: 'اسمي تالة.' },
+      { who: 'A', sv: 'Hej Tala! Hur mår du?', ar: 'مرحباً يا تالة! كيف حالك؟' },
+      { who: 'B', sv: 'Jag mår bra, tack. Och du?', ar: 'أنا بخير، شكراً. وأنت؟' },
+      { who: 'A', sv: 'Bra, tack!', ar: 'بخير، شكراً!' },
+      { who: 'A', sv: 'Hej då, Tala!', ar: 'مع السلامة يا تالة!' },
+      { who: 'B', sv: 'Hej då!', ar: 'مع السلامة!' },
+    ],
+    gloss: { och: 'و' },
+    questions: [
+      { q: 'Vad heter mannen?', qa: 'ما اسم الرجل؟', a: ['Erik', 'Tala', 'Sara'], c: 0 },
+      { q: 'Hur mår Tala?', qa: 'كيف حال تالة؟', a: ['Bra', 'Inte bra'], c: 0 },
+      { q: 'Vad säger de i slutet?', qa: 'ماذا يقولان في النهاية؟', a: ['Hej då!', 'God morgon!', 'Tack!'], c: 0 },
+    ],
+  },
+  u2: {
+    kind: 'story', e: '🌍', sv: 'Tala och Eslam', ar: 'تالة وإسلام',
+    lines: [
+      { sv: 'Det här är Tala.', ar: 'هذه تالة.' },
+      { sv: 'Hon är från Syrien.', ar: 'هي من سوريا.' },
+      { sv: 'Hon bor i Syrien nu.', ar: 'هي تسكن في سوريا الآن.' },
+      { sv: 'Hon pratar arabiska.', ar: 'هي تتكلّم العربية.' },
+      { sv: 'Eslam bor i Sverige.', ar: 'إسلام يسكن في السويد.' },
+      { sv: 'Han pratar svenska och arabiska.', ar: 'هو يتكلّم السويدية والعربية.' },
+      { sv: 'Tala lär sig svenska.', ar: 'تالة تتعلّم السويدية.' },
+      { sv: 'Snart pratar hon svenska också!', ar: 'قريباً ستتكلّم السويدية أيضاً!' },
+    ],
+    gloss: { 'det här': 'هذا / هذه', nu: 'الآن', och: 'و', snart: 'قريباً', också: 'أيضاً', 'lär sig': 'تتعلّم' },
+    questions: [
+      { q: 'Var bor Tala?', qa: 'أين تسكن تالة؟', a: ['I Syrien', 'I Sverige'], c: 0 },
+      { q: 'Var bor Eslam?', qa: 'أين يسكن إسلام؟', a: ['I Syrien', 'I Sverige'], c: 1 },
+      { q: 'Vad pratar Eslam?', qa: 'ماذا يتكلّم إسلام؟', a: ['Svenska och arabiska', 'Bara arabiska', 'Bara svenska'], c: 0 },
+    ],
+  },
+  u3: {
+    kind: 'dialog', e: '🧾', sv: 'På kaféet', ar: 'في المقهى',
+    people: { A: 'Tala', B: 'Kassören' },
+    lines: [
+      { who: 'A', sv: 'Hej! Ett kaffe, tack.', ar: 'مرحباً! قهوة من فضلك.' },
+      { who: 'B', sv: 'Varsågod. Det kostar tjugo kronor.', ar: 'تفضّلي. ثمنها عشرون كرونة.' },
+      { who: 'A', sv: 'Och ett te?', ar: 'وشاي؟' },
+      { who: 'B', sv: 'Te kostar tio kronor.', ar: 'الشاي ثمنه عشر كرونات.' },
+      { who: 'A', sv: 'Två te, tack.', ar: 'كوبان من الشاي، من فضلك.' },
+      { who: 'B', sv: 'Det blir fyrtio kronor.', ar: 'المجموع أربعون كرونة.' },
+      { who: 'A', sv: 'Tack! Hej då!', ar: 'شكراً! مع السلامة!' },
+    ],
+    gloss: { kostar: 'يكلّف', kronor: 'كرونات', 'det blir': 'المجموع', fyrtio: 'أربعون', och: 'و', 'kassören': 'المحاسب' },
+    questions: [
+      { q: 'Vad kostar kaffe?', qa: 'كم ثمن القهوة؟', a: ['Tjugo kronor', 'Tio kronor', 'Sju kronor'], c: 0 },
+      { q: 'Vad kostar te?', qa: 'كم ثمن الشاي؟', a: ['Tjugo kronor', 'Tio kronor', 'Hundra kronor'], c: 1 },
+      { q: 'Hur många te köper Tala?', qa: 'كم كوب شاي تشتري تالة؟', a: ['Ett', 'Två', 'Tre'], c: 1 },
+    ],
+  },
+  u4: {
+    kind: 'story', e: '👨‍👩‍👧', sv: 'Min familj', ar: 'عائلتي',
+    lines: [
+      { sv: 'Det här är min familj.', ar: 'هذه عائلتي.' },
+      { sv: 'Min mamma heter Amal.', ar: 'أمي اسمها أمل.' },
+      { sv: 'Min pappa heter Ahmad.', ar: 'أبي اسمه أحمد.' },
+      { sv: 'Jag har en bror och en syster.', ar: 'عندي أخ وأخت.' },
+      { sv: 'Min bror heter Omar. Han är tio år.', ar: 'أخي اسمه عمر. عمره عشر سنوات.' },
+      { sv: 'Min syster heter Sara. Hon är sju år.', ar: 'أختي اسمها سارة. عمرها سبع سنوات.' },
+      { sv: 'Jag har en vän. Hon heter Lina.', ar: 'عندي صديقة. اسمها لينا.' },
+    ],
+    gloss: { min: 'ـي (لي)', 'det här': 'هذا / هذه', har: 'عنده / عندي', år: 'سنة', och: 'و' },
+    questions: [
+      { q: 'Vad heter mamman?', qa: 'ما اسم الأم؟', a: ['Amal', 'Sara', 'Lina'], c: 0 },
+      { q: 'Hur gammal är Omar?', qa: 'كم عمر عمر؟', a: ['Sju år', 'Tio år', 'Tjugo år'], c: 1 },
+      { q: 'Har hon en syster?', qa: 'هل عندها أخت؟', a: ['Ja', 'Nej'], c: 0 },
+    ],
+  },
+  u5: {
+    kind: 'dialog', e: '🍞', sv: 'Frukost', ar: 'الفطور',
+    people: { A: 'Eslam', B: 'Tala' },
+    lines: [
+      { who: 'A', sv: 'Vill du ha kaffe eller te?', ar: 'هل تريدين قهوة أم شاياً؟' },
+      { who: 'B', sv: 'Te, tack. Jag dricker inte kaffe.', ar: 'شاي، من فضلك. أنا لا أشرب القهوة.' },
+      { who: 'A', sv: 'Vill du ha bröd och ost?', ar: 'هل تريدين خبزاً وجبنة؟' },
+      { who: 'B', sv: 'Ja, tack! Det är gott.', ar: 'نعم، شكراً! هذا لذيذ.' },
+      { who: 'A', sv: 'Och vatten?', ar: 'وماء؟' },
+      { who: 'B', sv: 'Ja, ett glas vatten, tack.', ar: 'نعم، كأس ماء من فضلك.' },
+    ],
+    gloss: { vill: 'يريد', ha: 'يأخذ / يملك', 'vill du ha': 'هل تريد', eller: 'أم / أو', och: 'و', frukost: 'فطور' },
+    questions: [
+      { q: 'Vad dricker Tala?', qa: 'ماذا تشرب تالة؟', a: ['Te', 'Kaffe', 'Mjölk'], c: 0 },
+      { q: 'Dricker Tala kaffe?', qa: 'هل تشرب تالة القهوة؟', a: ['Ja', 'Nej'], c: 1 },
+      { q: 'Vad äter hon?', qa: 'ماذا تأكل؟', a: ['Bröd och ost', 'Ris och kyckling', 'Ett äpple'], c: 0 },
+    ],
+  },
+  u6: {
+    kind: 'story', e: '🏠', sv: 'Min lägenhet', ar: 'شقّتي',
+    lines: [
+      { sv: 'Jag bor i en lägenhet.', ar: 'أنا أسكن في شقة.' },
+      { sv: 'Lägenheten har tre rum och ett kök.', ar: 'في الشقة ثلاث غرف ومطبخ.' },
+      { sv: 'I köket finns ett bord och fyra stolar.', ar: 'في المطبخ طاولة وأربعة كراسٍ.' },
+      { sv: 'I mitt rum finns en säng.', ar: 'في غرفتي سرير.' },
+      { sv: 'Fönstret är stort.', ar: 'النافذة كبيرة.' },
+      { sv: 'Min telefon ligger på bordet.', ar: 'هاتفي موجود على الطاولة.' },
+    ],
+    gloss: { finns: 'يوجد', 'det finns': 'يوجد', mitt: 'ـي (لي)', min: 'ـي (لي)', ligger: 'موجود (مستلقٍ)', på: 'على', stolar: 'كراسٍ', och: 'و' },
+    questions: [
+      { q: 'Hur många rum har lägenheten?', qa: 'كم غرفة في الشقة؟', a: ['Två', 'Tre', 'Fyra'], c: 1 },
+      { q: 'Var ligger telefonen?', qa: 'أين الهاتف؟', a: ['På bordet', 'I sängen', 'I köket'], c: 0 },
+      { q: 'Hur är fönstret?', qa: 'كيف هي النافذة؟', a: ['Stort', 'Litet'], c: 0 },
+    ],
+  },
+  u8: {
+    kind: 'story', e: '📖', sv: 'Tala pluggar', ar: 'تالة تدرس',
+    lines: [
+      { sv: 'Tala är hemma.', ar: 'تالة في البيت.' },
+      { sv: 'Hon läser en bok på svenska.', ar: 'هي تقرأ كتاباً بالسويدية.' },
+      { sv: 'Hon förstår inte allt.', ar: 'هي لا تفهم كل شيء.' },
+      { sv: 'Hon skriver nya ord.', ar: 'هي تكتب كلمات جديدة.' },
+      { sv: 'Sedan lyssnar hon och pratar.', ar: 'بعد ذلك تستمع وتتكلّم.' },
+      { sv: '"Nu förstår jag!" säger hon.', ar: '"الآن أفهم!" تقول.' },
+    ],
+    gloss: { hemma: 'في البيت', allt: 'كل شيء', nya: 'جديدة', ord: 'كلمات', sedan: 'بعد ذلك', säger: 'تقول', på: 'بـ', och: 'و', pluggar: 'تدرس' },
+    questions: [
+      { q: 'Var är Tala?', qa: 'أين تالة؟', a: ['Hemma', 'I Sverige', 'I köket'], c: 0 },
+      { q: 'Förstår hon allt?', qa: 'هل تفهم كل شيء؟', a: ['Ja', 'Nej'], c: 1 },
+      { q: 'Vad skriver hon?', qa: 'ماذا تكتب؟', a: ['Nya ord', 'En bok', 'Siffror'], c: 0 },
+    ],
+  },
+  u7: {
+    kind: 'story', e: '📅', sv: 'Talas vecka', ar: 'أسبوع تالة',
+    lines: [
+      { sv: 'Idag är det måndag.', ar: 'اليوم هو الاثنين.' },
+      { sv: 'På måndag läser Tala svenska.', ar: 'يوم الاثنين تدرس تالة السويدية.' },
+      { sv: 'På onsdag pratar hon med Eslam.', ar: 'يوم الأربعاء تتكلّم مع إسلام.' },
+      { sv: 'På fredag är det fika.', ar: 'يوم الجمعة هناك استراحة قهوة.' },
+      { sv: 'På lördag sover hon länge.', ar: 'يوم السبت تنام طويلاً.' },
+      { sv: 'Imorgon är det tisdag.', ar: 'غداً هو الثلاثاء.' },
+    ],
+    gloss: { på: 'في (يوم)', med: 'مع', länge: 'طويلاً', vecka: 'أسبوع' },
+    questions: [
+      { q: 'Vilken dag är det idag?', qa: 'أي يوم هو اليوم؟', a: ['Måndag', 'Fredag', 'Söndag'], c: 0 },
+      { q: 'Vad gör hon på lördag?', qa: 'ماذا تفعل يوم السبت؟', a: ['Hon sover länge', 'Hon jobbar', 'Hon fikar'], c: 0 },
+      { q: 'När pratar hon med Eslam?', qa: 'متى تتكلّم مع إسلام؟', a: ['På onsdag', 'På fredag', 'Idag'], c: 0 },
+    ],
+  },
+  u9: {
+    kind: 'story', e: '🎨', sv: 'Talas rum', ar: 'غرفة تالة',
+    lines: [
+      { sv: 'Tala har en ny telefon.', ar: 'عند تالة هاتف جديد.' },
+      { sv: 'Telefonen är svart.', ar: 'الهاتف أسود.' },
+      { sv: 'Hennes rum är litet.', ar: 'غرفتها صغيرة.' },
+      { sv: 'Dörren är vit och sängen är blå.', ar: 'الباب أبيض والسرير أزرق.' },
+      { sv: 'Hon har en röd stol.', ar: 'عندها كرسي أحمر.' },
+      { sv: 'Huset är gammalt, men det är fint.', ar: 'البيت قديم، لكنه جميل.' },
+    ],
+    gloss: { hennes: 'ـها (لها)', men: 'لكن', fint: 'جميل', och: 'و', gammalt: 'قديم (مع ett)', litet: 'صغير (مع ett)' },
+    questions: [
+      { q: 'Vilken färg har telefonen?', qa: 'ما لون الهاتف؟', a: ['Svart', 'Vit', 'Röd'], c: 0 },
+      { q: 'Hur är rummet?', qa: 'كيف هي الغرفة؟', a: ['Litet', 'Stort'], c: 0 },
+      { q: 'Vad är rött?', qa: 'ما الشيء الأحمر؟', a: ['Stolen', 'Dörren', 'Sängen'], c: 0 },
+    ],
+  },
+  u10: {
+    kind: 'dialog', e: '🌼', sv: 'Fika på jobbet', ar: 'استراحة قهوة في العمل',
+    people: { A: 'Anna', B: 'Tala' },
+    lines: [
+      { who: 'A', sv: 'Ska vi fika?', ar: 'هل نأخذ استراحة قهوة؟' },
+      { who: 'B', sv: 'Ja, gärna!', ar: 'نعم، بكل سرور!' },
+      { who: 'A', sv: 'Vill du ha en kanelbulle?', ar: 'هل تريدين كعكة قرفة؟' },
+      { who: 'B', sv: 'Ja, tack. Mmm, den är god!', ar: 'نعم، شكراً. ممم، إنها لذيذة!' },
+      { who: 'A', sv: 'I juni firar vi midsommar.', ar: 'في حزيران نحتفل بعيد منتصف الصيف.' },
+      { who: 'B', sv: 'Vad är midsommar?', ar: 'ما هو عيد منتصف الصيف؟' },
+      { who: 'A', sv: 'En stor fest i naturen, med blommor och mat.', ar: 'حفلة كبيرة في الطبيعة، مع زهور وطعام.' },
+    ],
+    gloss: { ska: 'سوف / هل', gärna: 'بكل سرور', vill: 'يريد', den: 'هي / هو (للأشياء)', firar: 'نحتفل', fest: 'حفلة', med: 'مع', blommor: 'زهور', mat: 'طعام', jobbet: 'العمل', och: 'و' },
+    questions: [
+      { q: 'Vad äter Tala?', qa: 'ماذا تأكل تالة؟', a: ['En kanelbulle', 'Bröd', 'Ris'], c: 0 },
+      { q: 'När firar man midsommar?', qa: 'متى يحتفلون بعيد منتصف الصيف؟', a: ['I juni', 'I december'], c: 0 },
+      { q: 'Var är festen?', qa: 'أين الحفلة؟', a: ['I naturen', 'I köket', 'På jobbet'], c: 0 },
+    ],
+  },
+};

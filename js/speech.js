@@ -13,15 +13,30 @@ if ('speechSynthesis' in window) {
 
 export const hasSwedishVoice = () => Boolean(svVoice);
 
-export function say(text, slow = false) {
-  if (!('speechSynthesis' in window)) return;
+export function say(text, slow = false, pitch = 1) {
+  if (!('speechSynthesis' in window)) return Promise.resolve();
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'sv-SE';
-  if (svVoice) u.voice = svVoice;
-  u.rate = slow ? 0.6 : 0.9;
-  speechSynthesis.speak(u);
+  return sayQueued(text, slow, pitch);
 }
+
+// Speaks after anything already queued; resolves when done (used to read a whole story).
+export function sayQueued(text, slow = false, pitch = 1) {
+  if (!('speechSynthesis' in window)) return Promise.resolve();
+  return new Promise(resolve => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'sv-SE';
+    if (svVoice) u.voice = svVoice;
+    u.rate = slow ? 0.6 : 0.9;
+    u.pitch = pitch;
+    // Some phones never fire onend; don't let a story stall on that.
+    const done = () => { clearTimeout(timer); resolve(); };
+    const timer = setTimeout(done, 1500 + text.length * (slow ? 160 : 110));
+    u.onend = u.onerror = done;
+    speechSynthesis.speak(u);
+  });
+}
+
+export const stopSpeaking = () => { if ('speechSynthesis' in window) speechSynthesis.cancel(); };
 
 const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 export const canListen = () => Boolean(Recognition);

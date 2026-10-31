@@ -1,9 +1,9 @@
 // Offline support: app files are cached; the network is tried first so updates arrive quickly.
-const CACHE = 'tala-v2';
+const CACHE = 'tala-v3';
 const FILES = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/app.js', 'js/content.js', 'js/store.js', 'js/cloud.js', 'js/config.js',
-  'js/exercises.js', 'fonts/fonts.css', 'js/life.js', 'js/dashboard.js', 'eslam.html', 'css/dashboard.css', 'js/speech.js', 'js/i18n.js', 'js/greet.js',
+  'js/exercises.js', 'fonts/fonts.css', 'js/life.js', 'js/dashboard.js', 'eslam.html', 'css/dashboard.css', 'js/speech.js', 'js/i18n.js', 'js/greet.js', 'js/stories.js',
 ];
 
 self.addEventListener('install', e => {
