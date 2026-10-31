@@ -3,7 +3,7 @@ const CACHE = 'tala-v1';
 const FILES = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/app.js', 'js/content.js', 'js/store.js', 'js/cloud.js', 'js/config.js',
-  'js/exercises.js', 'js/speech.js', 'js/i18n.js', 'js/greet.js',
+  'js/exercises.js', 'js/life.js', 'js/dashboard.js', 'eslam.html', 'css/dashboard.css', 'js/speech.js', 'js/i18n.js', 'js/greet.js',
 ];
 
 self.addEventListener('install', e => {

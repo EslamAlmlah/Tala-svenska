@@ -239,3 +239,17 @@ label { display: flex; flex-direction: column; gap: 4px; width: 100%; font-weigh
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Life in Sweden */
+.back { align-self: flex-start; padding: 4px 0; }
+.topic-head { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.article { display: block; }
+.article p { margin: 0 0 10px; }
+.article h2 { margin-bottom: 8px; }
+.word-row {
+  display: flex; gap: 10px; align-items: center; width: 100%; border: 0; background: none; padding: 10px 2px;
+  border-bottom: 1px solid var(--line); text-align: start;
+}
+.word-row:last-child { border-bottom: 0; }
+.explain { background: var(--bg2); border-radius: 16px; padding: 12px 14px; animation: pop 0.3s ease both; }
+nav a { padding: 4px 6px; }

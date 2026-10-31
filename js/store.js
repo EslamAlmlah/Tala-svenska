@@ -21,6 +21,7 @@ function fresh() {
     tests: [],        // { unit, score, passed, at }
     position: { unit: UNITS[0].id, lesson: 0 },
     games: {},        // gameId -> { best, plays }
+    life: {},         // topicId -> { read, wordsDone, quizBest, quizTries }
     updatedAt: null,
   };
 }
@@ -31,7 +32,7 @@ let queue = loadQueue();
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY));
-    if (s && s.version === 1) return s;
+    if (s && s.version === 1) { s.life ||= {}; return s; }
   } catch {}
   return fresh();
 }
@@ -167,6 +168,16 @@ export function finishGame(id, score) {
   g.best = Math.max(g.best, score);
   state.games[id] = g;
   log('game_done', { game: id, score });
+}
+
+// ---- Life in Sweden ----
+export function lifeProgress(id) {
+  return state.life[id] || { read: false, wordsDone: false, quizBest: null, quizTries: 0 };
+}
+
+export function updateLife(id, patch, event) {
+  state.life[id] = { ...lifeProgress(id), ...patch };
+  if (event) log(event.type, { topic: id, ...event.data });
 }
 
 // ---- Sync ----

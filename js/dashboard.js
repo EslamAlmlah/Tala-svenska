@@ -1,5 +1,6 @@
 // Eslam's page: exactly where Tala is in the course and how it is going.
 import { UNITS, lessonsOf, allItems } from './content.js';
+import { LIFE } from './life.js';
 import { cloudEnabled, currentUser, signIn, signOut, rest, useSessionKey } from './cloud.js';
 
 // Separate login from the learner app, so Eslam's account never becomes the app's account on a shared phone.
@@ -12,7 +13,7 @@ const main = document.getElementById('main');
 const tip = document.getElementById('tip');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ITEMS = new Map(allItems().map(i => [i.sv, i]));
-const UNIT_NAME = Object.fromEntries(UNITS.map(u => [u.id, u.sv]));
+const UNIT_NAME = Object.fromEntries([...UNITS, ...LIFE].map(u => [u.id, u.sv]));
 
 const EX_NAMES = {
   chooseMeaning: 'Välj betydelse', chooseSwedish: 'Välj svenska ordet', listenChoose: 'Lyssna och välj',
@@ -146,6 +147,18 @@ function render({ state, syncedAt, events }) {
       </table></div>
     </section>
 
+    <section class="card">
+      <h2>Livet i Sverige (${LIFE.filter(l => state.life?.[l.id]?.quizBest != null).length} av ${LIFE.length} klara)</h2>
+      <div class="scroll"><table>
+        <thead><tr><th>Ämne</th><th>Läst</th><th>Ord övade</th><th>Bästa quiz</th><th>Försök</th></tr></thead>
+        <tbody>${LIFE.map(l => {
+          const p = state.life?.[l.id] || {};
+          return `<tr><td>${l.e} ${esc(l.sv)}</td><td>${p.read ? '✅' : '–'}</td><td>${p.wordsDone ? '✅' : '–'}</td>
+            <td>${p.quizBest != null ? p.quizBest + ' %' : '–'}</td><td>${p.quizTries || 0}</td></tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </section>
+
     <section class="grid2">
       <div class="card">
         <h2>Träffsäkerhet per övning</h2>
@@ -181,7 +194,7 @@ function render({ state, syncedAt, events }) {
       </div>
       <div class="card">
         <h2>Aktivitetslogg</h2>
-        <ul class="log">${events.filter(e => e.type !== 'answer').slice(0, 80).map(e => `<li><span class="muted">${fmtTime(e.client_ts)}</span> ${describe(e)}</li>`).join('') || '<li class="muted">Inget ännu.</li>'}</ul>
+        <ul class="log">${events.filter(e => e.type !== 'answer' && e.type !== 'life_answer').slice(0, 80).map(e => `<li><span class="muted">${fmtTime(e.client_ts)}</span> ${describe(e)}</li>`).join('') || '<li class="muted">Inget ännu.</li>'}</ul>
       </div>
     </section>
 
@@ -208,7 +221,7 @@ const tile = (icon, value, label, sub) => `
 
 function describe(e) {
   const d = e.data || {};
-  const u = esc(UNIT_NAME[d.unit] || d.unit || '');
+  const u = esc(UNIT_NAME[d.unit || d.topic] || d.unit || d.topic || '');
   switch (e.type) {
     case 'app_open': return 'Öppnade appen';
     case 'login': return 'Loggade in';
@@ -220,6 +233,11 @@ function describe(e) {
     case 'review_done': return `Repeterade ${d.count} flashcards, kunde ${d.known}`;
     case 'game_done': return `Spelade ${d.game === 'match' ? 'Para ihop' : 'Snabblyssning'}: ${d.score} poäng`;
     case 'quit': return `Avbröt ${d.kind === 'test' ? 'provet' : 'lektionen'} i <b>${u}</b>`;
+    case 'life_open': return `Öppnade Livet i Sverige: <b>${u}</b>`;
+    case 'life_read': return `Läste klart <b>${u}</b>`;
+    case 'life_words_done': return `Övade orden i <b>${u}</b>: ${d.score} %`;
+    case 'life_quiz_done': return `Quiz <b>${u}</b>: ${d.score} %`;
+    case 'life_answer': return `Quizfråga ${d.q + 1} i <b>${UNIT_NAME[d.topic] || ''}</b>: ${d.ok ? '✅' : '❌'}`;
     case 'goal_set': return `Satte dagligt mål till ${d.minutes} min`;
     default: return esc(e.type);
   }

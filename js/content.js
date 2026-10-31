@@ -1,3 +1,5 @@
+import { LIFE } from './life.js';
+
 // Course content. Each unit has words (and short phrases) plus sentences.
 // Lessons are made automatically: words are split into groups of about five,
 // and the last lesson of a unit practises its sentences.
@@ -311,6 +313,9 @@ export function allItems() {
   for (const u of UNITS) {
     for (const w of u.words) out.push({ ...w, unit: u.id, kind: 'word' });
     for (const s of u.sentences) out.push({ ...s, unit: u.id, kind: 'sentence' });
+  }
+  for (const l of LIFE) {
+    for (const w of l.words) out.push({ ...w, unit: l.id, kind: /[.!?]$/.test(w.sv) ? 'sentence' : 'word' });
   }
   return out;
 }
