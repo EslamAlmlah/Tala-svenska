@@ -2,7 +2,7 @@
 import { UNITS, lessonsOf, allItems } from './content.js';
 import { getState, wordInfo, dueWords } from './store.js';
 import { say, canListen, listen, similarity, normalize } from './speech.js';
-import { t, esc } from './i18n.js';
+import { t, tp, esc } from './i18n.js';
 
 export const shuffle = a => {
   a = [...a];
@@ -88,8 +88,8 @@ export function testQueue(unit) {
 const sv = (s, cls = '') => `<span class="sv ${cls}" lang="sv" dir="ltr">${esc(s)}</span>`;
 const audioBtns = text => `
   <div class="audio-row">
-    <button class="btn-audio" data-say="${esc(text)}" aria-label="listen">🔊</button>
-    <button class="btn-audio small" data-say-slow="${esc(text)}" aria-label="slow">🐢</button>
+    <button class="btn-audio" data-say="${esc(text)}" aria-label="${tp('listen')}">🔊</button>
+    <button class="btn-audio small" data-say-slow="${esc(text)}" aria-label="${tp('slow')}">🐢</button>
   </div>`;
 
 function wireAudio(el) {

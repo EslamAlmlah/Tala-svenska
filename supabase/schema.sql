@@ -54,6 +54,22 @@ grant select, insert on public.events to authenticated;
 grant select, insert, update on public.learner_state to authenticated;
 grant select on public.viewers to authenticated;
 
+-- Short messages from Eslam, shown on Tala's home screen.
+create table if not exists public.notes (
+  id bigint generated always as identity primary key,
+  learner_id uuid not null references auth.users on delete cascade,
+  author_id uuid not null default auth.uid() references auth.users on delete cascade,
+  text text not null check (char_length(text) <= 500),
+  created_at timestamptz not null default now()
+);
+alter table public.notes enable row level security;
+drop policy if exists "view" on public.notes;
+create policy "view" on public.notes for select to authenticated using (public.can_view(learner_id));
+drop policy if exists "viewer writes" on public.notes;
+create policy "viewer writes" on public.notes for insert to authenticated
+  with check (author_id = auth.uid() and exists (select 1 from public.viewers v where v.viewer_id = auth.uid() and v.learner_id = notes.learner_id));
+grant select, insert on public.notes to authenticated;
+
 -- Step 2, after creating both users under Authentication → Users → Add user:
 -- replace the two e-mail addresses and run this line.
 -- insert into public.viewers (viewer_id, learner_id)

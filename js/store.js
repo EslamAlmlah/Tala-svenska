@@ -14,7 +14,7 @@ function fresh() {
     createdAt: new Date().toISOString(),
     xp: 0,
     streak: { count: 0, last: null, best: 0 },
-    dailyGoalMin: 30,
+    dailyGoalMin: 15,
     daily: {},        // date -> seconds active
     units: {},        // unitId -> { lessonsDone, testBest, passed, testTries }
     words: {},        // sv -> { seen, ok, bad, box, due, last }
@@ -22,6 +22,7 @@ function fresh() {
     position: { unit: UNITS[0].id, lesson: 0 },
     games: {},        // gameId -> { best, plays }
     life: {},         // topicId -> { read, wordsDone, quizBest, quizTries }
+    lastMissed: [],   // words missed in the latest session, for a quick re-practice
     updatedAt: null,
   };
 }
@@ -32,7 +33,7 @@ let queue = loadQueue();
 function load() {
   try {
     const s = JSON.parse(localStorage.getItem(STATE_KEY));
-    if (s && s.version === 1) { s.life ||= {}; return s; }
+    if (s && s.version === 1) { s.life ||= {}; s.lastMissed ||= []; return s; }
   } catch {}
   return fresh();
 }
@@ -168,6 +169,17 @@ export function finishGame(id, score) {
   g.best = Math.max(g.best, score);
   state.games[id] = g;
   log('game_done', { game: id, score });
+}
+
+export function setLastMissed(list) {
+  if (list.length) state.lastMissed = list;
+}
+
+// ---- Notes from Eslam ----
+export async function latestNote() {
+  if (!cloudEnabled() || !currentUser() || !navigator.onLine) return null;
+  const rows = await rest(`notes?learner_id=eq.${currentUser().id}&select=text,created_at&order=created_at.desc&limit=1`);
+  return rows?.[0] || null;
 }
 
 // ---- Life in Sweden ----

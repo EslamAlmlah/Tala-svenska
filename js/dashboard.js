@@ -10,6 +10,7 @@ useSessionKey('ts_session_viewer');
 const strength = w => (!w || !w.seen ? 0 : Math.round(100 * (0.7 * (w.box / 7) + 0.3 * (w.ok / w.seen))));
 
 const main = document.getElementById('main');
+let learnerId = null;
 const tip = document.getElementById('tip');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const ITEMS = new Map(allItems().map(i => [i.sv, i]));
@@ -39,6 +40,7 @@ async function loadCloud() {
   const v = await rest('viewers?select=learner_id');
   const id = v?.[0]?.learner_id;
   if (!id) throw new Error('Ditt konto är inte kopplat till Tala ännu. Kör sista raden i SQL-filen (insert into public.viewers…).');
+  learnerId = id;
   const [st] = await rest(`learner_state?user_id=eq.${id}&select=state,updated_at`);
   const events = await rest(`events?user_id=eq.${id}&select=client_ts,type,data&order=client_ts.desc&limit=3000`);
   return { state: st?.state, syncedAt: st?.updated_at, events: events || [] };
@@ -104,6 +106,13 @@ function render({ state, syncedAt, events }) {
       </div>
       <button class="btn" id="out">Logga ut</button>
     </header>
+
+    ${learnerId ? `<section class="card note">
+      <h2>💌 Skicka ett meddelande till Tala</h2>
+      <p class="muted small">Visas överst på hennes startsida. Skriv gärna på enkel svenska, eller på arabiska.</p>
+      <form id="noteForm" class="row-between"><input id="noteText" maxlength="500" class="search grow" dir="auto" placeholder="Bra jobbat idag! 💜"><button class="btn primary">Skicka</button></form>
+      <p class="muted small" id="noteMsg"></p>
+    </section>` : ''}
 
     <section class="card where">
       <div class="where-emoji">${posUnit.e}</div>
@@ -209,6 +218,17 @@ function render({ state, syncedAt, events }) {
     </section>`;
 
   document.getElementById('out').onclick = () => { signOut(); location.reload(); };
+  const nf = document.getElementById('noteForm');
+  if (nf) nf.onsubmit = async e => {
+    e.preventDefault();
+    const text = document.getElementById('noteText').value.trim();
+    if (!text) return;
+    try {
+      await rest('notes', { method: 'POST', body: { learner_id: learnerId, text } });
+      document.getElementById('noteText').value = '';
+      document.getElementById('noteMsg').textContent = 'Skickat ✓';
+    } catch (err) { document.getElementById('noteMsg').textContent = err.message; }
+  };
   document.getElementById('q').oninput = e => {
     const q = e.target.value.toLowerCase();
     document.querySelectorAll('#words tbody tr').forEach(tr => { tr.hidden = q && !tr.dataset.q.includes(q); });
@@ -324,4 +344,4 @@ async function start() {
 }
 
 start();
-setInterval(() => { if (currentUser() && document.visibilityState === 'visible' && !document.getElementById('q')?.value) start(); }, 120_000);
+setInterval(() => { if (currentUser() && document.visibilityState === 'visible' && !document.getElementById('q')?.value && !document.getElementById('noteText')?.value) start(); }, 120_000);
