@@ -192,7 +192,7 @@ function renderCourse() {
 
 // ---- Lesson / test session ----
 function runSession(kind, unit, lessonIndex = 0) {
-  if (!unit) return go('course');
+  if (!unit || (kind === 'lesson' && !lessonsOf(unit)[+lessonIndex])) return go('course');
   const queue = kind === 'lesson' ? lessonQueue(unit, lessonIndex) : testQueue(unit);
   const graded = new Set();
   let firstTry = 0, gradedCount = 0, i = 0, combo = 0;
@@ -427,7 +427,7 @@ function storyQuestions(unitId, story) {
       <p class="ex-title" lang="sv" dir="ltr">${esc(q.q)}</p>
       <button class="btn ghost" id="hint">ع ${t('hint')}</button>
       <p class="muted" id="qa" hidden>${esc(q.qa)}</p>
-      <div class="options">${q.a.map((a, k) => `<button class="opt" data-k="${k}" lang="sv" dir="ltr">${esc(a)}</button>`).join('')}</div>
+      <div class="options">${shuffle(q.a.map((a, k) => k)).map(k => `<button class="opt" data-k="${k}" lang="sv" dir="ltr">${esc(q.a[k])}</button>`).join('')}</div>
       <button class="btn primary wide" id="nx" hidden>${t('continue')}</button>`;
     say(q.q);
     $('#hint').onclick = () => { $('#qa').hidden = false; };
