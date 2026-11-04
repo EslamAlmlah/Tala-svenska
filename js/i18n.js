@@ -99,6 +99,17 @@ const L = {
   quiz: ['اختبار قصير', 'Quiz'],
   nextTopic: ['الموضوع التالي عن السويد', 'Nästa ämne om Sverige'],
   dailyGoal: ['هدفي اليومي (بالدقائق)', 'Mitt dagliga mål (minuter)'],
+  myWords: ['كل ما تعلّمتِه', 'Allt jag har lärt mig'],
+  myWordsInfo: ['كل الكلمات والجمل، اضغطي على أي واحدة لمراجعتها', 'Alla ord och meningar, tryck för att repetera'],
+  dueToday: ['للمراجعة اليوم', 'Repetera idag'],
+  inOneDay: ['غداً', 'imorgon'],
+  srsTitle: ['كيف تعمل أيام المراجعة؟', 'Hur fungerar repetitionsdagarna?'],
+  srsInfo: ['كل كلمة لها موعد مراجعة خاص بها. عندما تعرفينها يبتعد الموعد: بعد يوم، ثم يومين، ثم 4 أيام، ثم أسبوع، ثم أسبوعين، ثم شهر، ثم شهرين. وإذا نسيتِها تعود قريبة. هكذا تراجعين الكلمة قبل أن تنسيها بقليل، وهذه أقوى طريقة للحفظ.', 'Varje ord har ett eget repetitionsdatum. Kan du ordet flyttas det längre fram: 1, 2, 4, 7, 15, 30 och 60 dagar. Glömmer du det kommer det tillbaka snart.'],
+  filter_all: ['الكل', 'Alla'],
+  filter_weak: ['تحتاج تمريناً', 'Behöver övning'],
+  filter_strong: ['أتقنتُها', 'Sitter'],
+  searchWords: ['ابحثي عن كلمة…', 'Sök ord…'],
+  reviewThese: ['راجعي الكلمات الضعيفة', 'Repetera de svaga orden'],
   install: ['أضيفي التطبيق إلى الشاشة الرئيسية من قائمة Chrome ⋮ ← "إضافة إلى الشاشة الرئيسية"', 'Lägg till på startskärmen via Chrome-menyn'],
 };
 

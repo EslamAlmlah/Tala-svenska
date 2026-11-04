@@ -4,7 +4,7 @@ import * as S from './store.js';
 import { cloudEnabled, currentUser, signIn } from './cloud.js';
 import { lessonQueue, testQueue, RENDER, itemBySv, shuffle, matchBoard } from './exercises.js';
 import { say, sayQueued, stopSpeaking, hasSwedishVoice } from './speech.js';
-import { t, tp, esc } from './i18n.js';
+import { t, tp, esc, uiStage } from './i18n.js';
 import { greeting, cheer, wordOfDay, confetti } from './greet.js';
 import { LIFE } from './life.js';
 import { STORIES, COMMON } from './stories.js';
@@ -22,6 +22,8 @@ const routes = {
   lesson: (u, l) => runSession('lesson', UNITS.find(x => x.id === u), +l),
   test: u => runSession('test', UNITS.find(x => x.id === u)),
   review: renderReview,
+  mywords: renderMyWords,
+  reviewset: reviewSet,
   games: renderGames,
   game: id => (id === 'match' ? gameMatch() : gameListen()),
   me: renderMe,
@@ -40,7 +42,7 @@ function route() {
   const [name, ...args] = (location.hash.slice(2) || 'home').split('/');
   scrollTo(0, 0);
   (routes[name] || renderHome)(...args);
-  const tab = ['review', 'games'].includes(name) ? 'practice' : name;
+  const tab = ['review', 'games', 'mywords', 'reviewset'].includes(name) ? 'practice' : name;
   document.querySelectorAll('nav a').forEach(a => a.classList.toggle('on', a.dataset.r === tab));
   const inSession = ['lesson', 'test', 'game', 'lifewords', 'lifequiz', 'practicewords', 'story'].includes(name);
   $('nav').hidden = inSession;
@@ -596,10 +598,16 @@ function renderReview() {
   renderChrome();
   const due = S.dueWords().map(itemBySv).filter(Boolean);
   if (!due.length) {
-    main.innerHTML = `<div class="empty"><div class="big-emoji">🌟</div><p>${t('nothingDue')}</p></div>`;
+    main.innerHTML = `<div class="empty"><div class="big-emoji">🌟</div><p>${t('nothingDue')}</p>
+      <button class="btn primary" id="mw">📚 ${t('myWords')}</button></div>`;
+    $('#mw').onclick = () => go('mywords');
     return;
   }
-  const cards = shuffle(due).slice(0, 12);
+  flashcards(shuffle(due).slice(0, 12), 'practice');
+}
+
+// Flashcards for any list of items; every answer moves the card's next review date.
+function flashcards(cards, backTo) {
   let k = 0, known = 0;
   S.log('review_start', { count: cards.length });
   const show = () => {
@@ -610,7 +618,7 @@ function renderReview() {
       main.innerHTML = `<div class="done-screen"><div class="big-emoji">🃏</div><h1>${t('done')}</h1>
         <p class="score">${frac(known, cards.length)}</p><button class="btn primary wide" id="h">${t('continue')}</button></div>`;
       if (known >= cards.length * 0.7) setTimeout(confetti, 150);
-      $('#h').onclick = () => go('practice');
+      $('#h').onclick = () => go(backTo);
       return;
     }
     const c = cards[k];
@@ -635,6 +643,115 @@ function renderReview() {
   show();
 }
 
+// ---- Everything learned so far ----
+const learnedList = () => Object.entries(S.getState().words)
+  .map(([sv, w]) => ({ item: itemBySv(sv), w }))
+  .filter(x => x.item && x.w.seen);
+
+// Days until the next review, as a short label.
+function dueLabel(w) {
+  const days = Math.round((new Date(w.due) - new Date(new Date().toLocaleDateString('sv-SE'))) / 864e5);
+  if (days <= 0) return `<span class="tag due">${t('dueToday')}</span>`;
+  if (days === 1) return `<span class="tag">${tp('inOneDay')}</span>`;
+  // Arabic counts: 2 has its own form, 3-10 take a plural, 11+ a singular.
+  const ar = days === 2 ? 'بعد يومين' : days <= 10 ? `بعد <bdi>${days}</bdi> أيام` : `بعد <bdi>${days}</bdi> يوماً`;
+  return `<span class="tag">${uiStage() >= 2 ? `om <bdi>${days}</bdi> dagar` : ar}</span>`;
+}
+
+let wordFilter = 'all';
+function renderMyWords() {
+  renderChrome();
+  const list = learnedList();
+  if (!list.length) {
+    main.innerHTML = `<div class="empty"><div class="big-emoji">📚</div><p>${t('learnWordsFirst')}</p></div>`;
+    return;
+  }
+  const mastered = list.filter(x => S.strength(x.w) >= 60).length;
+  const due = list.filter(x => x.w.due <= new Date().toLocaleDateString('sv-SE')).length;
+  const groups = [...UNITS, ...LIFE, { id: 'mined', e: '⭐', ar: 'جمل حفظتِها من القصص', sv: 'Sparade meningar' }]
+    .map(u => ({ u, rows: list.filter(x => x.item.unit === u.id) }))
+    .filter(g => g.rows.length);
+  main.innerHTML = `
+    <section class="topic-head"><div class="emoji">📚</div><h1>${t('myWords')}</h1></section>
+    <section class="stat-row">
+      <div class="stat"><b><bdi>${list.length}</bdi></b><span>${t('statWords')}</span></div>
+      <div class="stat"><b><bdi>${mastered}</bdi></b><span>${t('statMastered')}</span></div>
+      <div class="stat"><b><bdi>${due}</bdi></b><span>${t('dueToday')}</span></div>
+    </section>
+    <details class="card srs-info"><summary>🗓️ ${t('srsTitle')}</summary><p>${t('srsInfo')}</p></details>
+    <div class="row fchips">
+      ${['all', 'weak', 'strong'].map(f => `<button class="fchip ${wordFilter === f ? 'on' : ''}" data-f="${f}">${t('filter_' + f)}</button>`).join('')}
+    </div>
+    <input id="wq" class="wsearch" dir="auto" placeholder="${tp('searchWords')}">
+    ${groups.map(g => `
+      <section class="card word-group" data-unit="${g.u.id}">
+        <div class="row-between"><h2>${g.u.e} ${esc(g.u.ar)} <small class="sub" lang="sv" dir="ltr">${esc(g.u.sv)}</small></h2>
+          <button class="btn primary btn-sm" data-rev="${g.u.id}">🃏 ${t('review')}</button></div>
+        <ul class="word-list">${g.rows.sort((a, b) => S.strength(a.w) - S.strength(b.w)).map(({ item, w }) => {
+          const st = S.strength(w);
+          const cls = st >= 60 ? 'strong' : st < 30 ? 'weak' : 'mid';
+          return `<li class="word-row" data-sv="${esc(item.sv)}" data-cls="${cls}" data-q="${esc((item.sv + ' ' + item.ar).toLowerCase())}">
+            <span class="w-emoji">${item.e || '💬'}</span>
+            <span class="grow"><b lang="sv" dir="ltr">${esc(item.sv)}</b><br><span class="muted">${esc(item.ar)}</span></span>
+            <span class="w-side"><span class="wmeter ${cls}"><span style="width:${Math.max(st, 6)}%"></span></span>${dueLabel(w)}</span>
+          </li>`;
+        }).join('')}</ul>
+      </section>`).join('')}
+    <div class="sticky-bottom"><button class="btn primary wide" data-rev="weak">🃏 ${t('reviewThese')}</button></div>`;
+  const applyFilter = () => {
+    const q = $('#wq').value.trim().toLowerCase();
+    main.querySelectorAll('.word-row').forEach(r => {
+      const okF = wordFilter === 'all' || (wordFilter === 'weak' ? r.dataset.cls !== 'strong' : r.dataset.cls === 'strong');
+      r.hidden = !(okF && (!q || r.dataset.q.includes(q)));
+    });
+    main.querySelectorAll('.word-group').forEach(g => { g.hidden = !g.querySelector('.word-row:not([hidden])'); });
+  };
+  main.querySelectorAll('.fchip').forEach(b => b.onclick = () => { wordFilter = b.dataset.f; renderMyWords(); });
+  $('#wq').oninput = applyFilter;
+  applyFilter();
+  main.querySelectorAll('.word-row').forEach(r => r.onclick = () => openWord(itemBySv(r.dataset.sv)));
+  main.querySelectorAll('[data-rev]').forEach(b => b.onclick = e => { e.stopPropagation(); go(`reviewset/${b.dataset.rev}`); });
+}
+
+// One word up close: hear it, flip it, and say whether she knew it.
+function openWord(item) {
+  const sheet = document.createElement('div');
+  sheet.className = 'sheet-bg';
+  sheet.innerHTML = `<div class="sheet">
+    <div class="flash" id="one">
+      <div class="face front">${item.e ? `<div class="emoji">${item.e}</div>` : ''}${svs(item.sv)}</div>
+      <div class="face back"><div class="ar-big">${esc(item.ar)}</div>${svs(item.sv)}${item.n ? `<p class="muted small">${esc(item.n)}</p>` : ''}</div>
+    </div>
+    <div class="row"><button class="btn" id="s1">🔊</button><button class="btn" id="s2">🐢</button><button class="btn" id="fl">${t('flip')}</button></div>
+    <div class="row" id="gr" hidden><button class="btn danger" id="no">${t('didntKnow')}</button><button class="btn primary" id="yes">${t('knew')}</button></div>
+    <button class="btn ghost wide" id="cl">${t('back')}</button></div>`;
+  document.body.append(sheet);
+  const q = sel => sheet.querySelector(sel);
+  const close = () => { sheet.remove(); renderMyWords(); };
+  const flip = () => { q('#one').classList.add('flipped'); q('#fl').hidden = true; q('#gr').hidden = false; };
+  say(item.sv);
+  q('#s1').onclick = () => say(item.sv);
+  q('#s2').onclick = () => say(item.sv, true);
+  q('#one').onclick = flip;
+  q('#fl').onclick = flip;
+  q('#yes').onclick = () => { S.recordAnswer(item, 'flashcard', true); S.addXp(1); S.save(); ding(); close(); };
+  q('#no').onclick = () => { S.recordAnswer(item, 'flashcard', false); S.save(); close(); };
+  q('#cl').onclick = () => { sheet.remove(); };
+  sheet.onclick = e => { if (e.target === sheet) sheet.remove(); };
+}
+
+// Review a chosen set: a unit, the weak words, or everything.
+function reviewSet(key) {
+  renderChrome();
+  let list = learnedList();
+  if (key === 'weak') list = list.filter(x => S.strength(x.w) < 60).length ? list.filter(x => S.strength(x.w) < 60) : list;
+  else if (key !== 'all') list = list.filter(x => x.item.unit === key);
+  if (!list.length) return go('mywords');
+  const cards = shuffle(list.sort((a, b) => S.strength(a.w) - S.strength(b.w)).slice(0, 20)).map(x => x.item);
+  S.log('review_set', { set: key, count: cards.length });
+  flashcards(cards, 'mywords');
+}
+
 // ---- Games ----
 const learnedItems = () => Object.keys(S.getState().words).map(itemBySv).filter(i => i && i.kind === 'word');
 
@@ -647,6 +764,10 @@ function renderPractice() {
     <section class="card tap" data-go="review">
       <div class="unit-emoji">🃏</div>
       <div class="grow"><h2>${t('review')}</h2><p><b>${due}</b> ${t('dueNow')}</p></div>
+    </section>
+    <section class="card tap" data-go="mywords">
+      <div class="unit-emoji">📚</div>
+      <div class="grow"><h2>${t('myWords')}</h2><p class="muted">${t('myWordsInfo')}</p></div>
     </section>
     ${missed ? `<section class="card tap" data-go="practicewords">
       <div class="unit-emoji">🎯</div>

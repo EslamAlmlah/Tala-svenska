@@ -264,6 +264,7 @@ function describe(e) {
     case 'test_start': return `Började provet i <b>${u}</b>`;
     case 'test_done': return `Prov <b>${u}</b>: ${d.score} % ${d.passed ? '✅ godkänd' : '❌ ej godkänd'}`;
     case 'review_start': return `Började repetera ${d.count} flashcards`;
+    case 'review_set': return `Repeterade ${d.count} kort från ${d.set === 'weak' ? 'svaga ord' : d.set === 'all' ? 'alla ord' : `<b>${esc(UNIT_NAME[d.set] || 'sparade meningar')}</b>`}`;
     case 'review_done': return `Repeterade ${d.count} flashcards, kunde ${d.known}`;
     case 'game_done': return `Spelade ${d.game === 'match' ? 'Para ihop' : 'Snabblyssning'}: ${d.score} poäng`;
     case 'quit': return `Avbröt ${d.kind === 'test' ? 'provet' : 'lektionen'} i <b>${u}</b>`;

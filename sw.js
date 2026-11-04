@@ -1,5 +1,5 @@
 // Offline support: app files are cached; the network is tried first so updates arrive quickly.
-const CACHE = 'tala-v3';
+const CACHE = 'tala-v4';
 const FILES = [
   './', 'index.html', 'css/app.css', 'manifest.webmanifest', 'icons/icon-192.png',
   'js/app.js', 'js/content.js', 'js/store.js', 'js/cloud.js', 'js/config.js',
